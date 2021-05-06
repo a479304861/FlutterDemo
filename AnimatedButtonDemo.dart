@@ -20,7 +20,7 @@ class _AnimatedButtonDemoState extends State<AnimatedButtonDemo> {
               CountdownButton(
                 duration: Duration(seconds: 5),
                 width: 200,
-                height: 100,
+                height: 300,
                 radius: 100,
               ),
             ],
@@ -36,6 +36,7 @@ class CountdownButton extends StatefulWidget {
   final double height;
   final double width;
   final double radius;
+
   CountdownButton({
     required this.duration,
     required this.height,
@@ -52,7 +53,7 @@ class _CountdownButtonState extends State<CountdownButton>
   late AnimationController _controller;
   String _text = 'Send';
   ButtonState buttonState = ButtonState.send;
-  late Timer timer;
+
   @override
   void initState() {
     super.initState();
@@ -62,11 +63,11 @@ class _CountdownButtonState extends State<CountdownButton>
       if (_controller.isCompleted) {
         buttonState = ButtonState.done;
         _text = "Done";
-        timer.cancel();
         setState(() {});
       }
     });
   }
+
   @override
   void dispose() {
     _controller.dispose();
@@ -92,7 +93,6 @@ class _CountdownButtonState extends State<CountdownButton>
               });
             } else if (buttonState == ButtonState.cancel) {
               _controller.reset();
-              timer.cancel();
               buttonState = ButtonState.send;
               setState(() {
                 _text = "Send";
@@ -162,6 +162,7 @@ class AnimatedBorder extends CustomPainter {
   Path blackPath = Path();
   Path bluePath = Path();
   Path path = Path();
+
   @override
   void paint(Canvas canvas, Size size) {
     var rRect = RRect.fromRectAndRadius(
@@ -191,11 +192,14 @@ class AnimatedBorder extends CustomPainter {
               startWithMoveTo: true),
           Offset.zero);
       blackPath.addPath(
-          pathMetric.extractPath(pathLength*0.25, pathLength ,
+          pathMetric.extractPath(pathLength * 0.25, pathLength,
               startWithMoveTo: true),
           Offset.zero);
-      bluePath.addPath(pathMetric.extractPath(pathLength * (controller.value - 0.75), pathLength * 0.25,
-          startWithMoveTo: true), Offset.zero);
+      bluePath.addPath(
+          pathMetric.extractPath(
+              pathLength * (controller.value - 0.75), pathLength * 0.25,
+              startWithMoveTo: true),
+          Offset.zero);
     }
     canvas.drawPath(bluePath, bluePainter);
     canvas.drawPath(blackPath, blackPainter);
