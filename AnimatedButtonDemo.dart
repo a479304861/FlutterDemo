@@ -19,9 +19,23 @@ class _AnimatedButtonDemoState extends State<AnimatedButtonDemo> {
             children: [
               CountdownButton(
                 duration: Duration(seconds: 5),
-                width: 200,
-                height: 300,
-                radius: 100,
+                width: 300,
+                height: 100,
+                radius: 20,
+              ),
+              SizedBox(height: 24,),
+              CountdownButton(
+                duration: Duration(seconds: 60),
+                width: 240,
+                height: 240,
+                radius: 240,
+              ),
+              SizedBox(height: 24,),
+              CountdownButton(
+                duration: Duration(seconds: 5),
+                width: 150,
+                height: 100,
+                radius: 0,
               ),
             ],
           ),
@@ -76,32 +90,32 @@ class _CountdownButtonState extends State<CountdownButton>
 
   @override
   Widget build(BuildContext context) {
-    return Stack(
-      children: [
-        Positioned.fill(
-          child: CustomPaint(
-            painter: AnimatedBorder(widget.radius, _controller),
+    return GestureDetector(
+        onTap: () {
+          if (buttonState == ButtonState.send) {
+            _controller.forward();
+            buttonState = ButtonState.cancel;
+            setState(() {
+              _text = "Cancel";
+            });
+          } else if (buttonState == ButtonState.cancel) {
+            _controller.reset();
+            buttonState = ButtonState.send;
+            setState(() {
+              _text = "Send";
+            });
+          }
+        },
+      child: Stack(
+        children: [
+          Positioned.fill(
+            child: CustomPaint(
+              painter: AnimatedBorder(widget.radius, _controller),
+            ),
           ),
-        ),
-        GestureDetector(
-          onTap: () {
-            if (buttonState == ButtonState.send) {
-              _controller.forward();
-              buttonState = ButtonState.cancel;
-              setState(() {
-                _text = "Cancel";
-              });
-            } else if (buttonState == ButtonState.cancel) {
-              _controller.reset();
-              buttonState = ButtonState.send;
-              setState(() {
-                _text = "Send";
-              });
-            }
-          },
-          child: buildContainer(),
-        ),
-      ],
+          buildContainer(),
+        ],
+      ),
     );
   }
 
@@ -138,9 +152,6 @@ class _CountdownButtonState extends State<CountdownButton>
         style: TextStyle(color: Colors.black38, fontSize: 24),
       )),
       width: widget.width,
-      decoration: BoxDecoration(
-          border: Border.all(color: Colors.black38, width: 4),
-          borderRadius: BorderRadius.circular(widget.radius)),
     );
   }
 }
