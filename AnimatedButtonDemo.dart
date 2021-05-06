@@ -1,4 +1,4 @@
-import 'dart:async';
+
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
@@ -23,17 +23,21 @@ class _AnimatedButtonDemoState extends State<AnimatedButtonDemo> {
                 height: 100,
                 radius: 20,
               ),
-              SizedBox(height: 24,),
+              SizedBox(
+                height: 24,
+              ),
               CountdownButton(
                 duration: Duration(seconds: 60),
                 width: 240,
                 height: 240,
                 radius: 240,
               ),
-              SizedBox(height: 24,),
+              SizedBox(
+                height: 24,
+              ),
               CountdownButton(
                 duration: Duration(seconds: 5),
-                width: 150,
+                width: 100,
                 height: 100,
                 radius: 0,
               ),
@@ -73,12 +77,11 @@ class _CountdownButtonState extends State<CountdownButton>
     super.initState();
     _controller = AnimationController(vsync: this, duration: widget.duration);
     _controller.addListener(() {
-      setState(() {});
       if (_controller.isCompleted) {
         buttonState = ButtonState.done;
         _text = "Done";
-        setState(() {});
       }
+      if (mounted) setState(() {});
     });
   }
 
@@ -91,30 +94,24 @@ class _CountdownButtonState extends State<CountdownButton>
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-        onTap: () {
-          if (buttonState == ButtonState.send) {
-            _controller.forward();
-            buttonState = ButtonState.cancel;
-            setState(() {
-              _text = "Cancel";
-            });
-          } else if (buttonState == ButtonState.cancel) {
-            _controller.reset();
-            buttonState = ButtonState.send;
-            setState(() {
-              _text = "Send";
-            });
-          }
-        },
-      child: Stack(
-        children: [
-          Positioned.fill(
-            child: CustomPaint(
-              painter: AnimatedBorder(widget.radius, _controller),
-            ),
-          ),
-          buildContainer(),
-        ],
+      onTap: () {
+        if (buttonState == ButtonState.send) {
+          _controller.forward();
+          buttonState = ButtonState.cancel;
+          setState(() {
+            _text = "Cancel";
+          });
+        } else if (buttonState == ButtonState.cancel) {
+          _controller.reset();
+          buttonState = ButtonState.send;
+          setState(() {
+            _text = "Send";
+          });
+        }
+      },
+      child: CustomPaint(
+        painter: AnimatedBorder(widget.radius, _controller),
+        child: buildContainer(),
       ),
     );
   }
@@ -164,9 +161,11 @@ class AnimatedBorder extends CustomPainter {
 
   Paint blackPainter = Paint()
     ..color = Colors.black38
+    ..isAntiAlias = true
     ..style = PaintingStyle.stroke
     ..strokeWidth = 4;
   Paint bluePainter = Paint()
+    ..isAntiAlias = true
     ..color = Colors.blue
     ..style = PaintingStyle.stroke
     ..strokeWidth = 4;
@@ -177,44 +176,33 @@ class AnimatedBorder extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     var rRect = RRect.fromRectAndRadius(
-        Rect.fromCenter(
-            center: Offset(size.width / 2, size.height / 2),
-            width: size.width,
-            height: size.height),
+        Rect.fromLTWH(0, 0, size.width, size.height),
         Radius.circular(radius));
     path.addRRect(rRect);
-    PathMetric pathMetric = path.computeMetrics(forceClosed: false).first;
+    PathMetric pathMetric = path.computeMetrics().first;
     double pathLength = pathMetric.length;
     if (controller.value < 0.75) {
       blackPath = pathMetric.extractPath(
-          pathLength / 4, pathLength * controller.value + pathLength / 4,
-          startWithMoveTo: true);
+          pathLength / 4, pathLength * controller.value + pathLength / 4);
       bluePath.addPath(
           pathMetric.extractPath(
-              pathLength * controller.value + pathLength / 4, pathLength,
-              startWithMoveTo: true),
+              pathLength * controller.value + pathLength / 4, pathLength),
           Offset.zero);
       bluePath.addPath(
-          pathMetric.extractPath(0, pathLength * 0.25, startWithMoveTo: true),
-          Offset.zero);
+          pathMetric.extractPath(0, pathLength * 0.25), Offset.zero);
     } else {
       blackPath.addPath(
-          pathMetric.extractPath(0, pathLength * (controller.value - 0.75),
-              startWithMoveTo: true),
+          pathMetric.extractPath(0, pathLength * (controller.value - 0.75)),
           Offset.zero);
       blackPath.addPath(
-          pathMetric.extractPath(pathLength * 0.25, pathLength,
-              startWithMoveTo: true),
-          Offset.zero);
+          pathMetric.extractPath(pathLength * 0.25, pathLength), Offset.zero);
       bluePath.addPath(
           pathMetric.extractPath(
-              pathLength * (controller.value - 0.75), pathLength * 0.25,
-              startWithMoveTo: true),
+              pathLength * (controller.value - 0.75), pathLength * 0.25),
           Offset.zero);
     }
     canvas.drawPath(bluePath, bluePainter);
     canvas.drawPath(blackPath, blackPainter);
-    // canvas.drawRRect(rRect, paint);
   }
 
   @override
