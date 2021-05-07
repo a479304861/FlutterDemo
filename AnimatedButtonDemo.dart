@@ -1,6 +1,5 @@
-
+import 'dart:math';
 import 'dart:ui';
-
 import 'package:flutter/material.dart';
 
 class AnimatedButtonDemo extends StatefulWidget {
@@ -175,34 +174,55 @@ class AnimatedBorder extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    var rRect = RRect.fromRectAndRadius(
-        Rect.fromLTWH(0, 0, size.width, size.height),
-        Radius.circular(radius));
-    path.addRRect(rRect);
-    PathMetric pathMetric = path.computeMetrics().first;
+    initPath(size);
+    PathMetric pathMetric = path.computeMetrics(forceClosed: false).first;
     double pathLength = pathMetric.length;
-    if (controller.value < 0.75) {
-      blackPath = pathMetric.extractPath(
-          pathLength / 4, pathLength * controller.value + pathLength / 4);
-      bluePath.addPath(
-          pathMetric.extractPath(
-              pathLength * controller.value + pathLength / 4, pathLength),
-          Offset.zero);
-      bluePath.addPath(
-          pathMetric.extractPath(0, pathLength * 0.25), Offset.zero);
-    } else {
-      blackPath.addPath(
-          pathMetric.extractPath(0, pathLength * (controller.value - 0.75)),
-          Offset.zero);
-      blackPath.addPath(
-          pathMetric.extractPath(pathLength * 0.25, pathLength), Offset.zero);
-      bluePath.addPath(
-          pathMetric.extractPath(
-              pathLength * (controller.value - 0.75), pathLength * 0.25),
-          Offset.zero);
-    }
+    blackPath = pathMetric.extractPath(0, pathLength * controller.value);
+    bluePath =
+        pathMetric.extractPath(pathLength * controller.value, pathLength);
     canvas.drawPath(bluePath, bluePainter);
     canvas.drawPath(blackPath, blackPainter);
+  }
+
+  void initPath(Size size) {
+    if (radius > min(size.width / 2, size.height / 2)) {
+      radius = min(size.width / 2, size.height / 2);
+    }
+    path.moveTo(size.width / 2, 0);
+    path.lineTo(size.width - radius, 0);
+    path.arcTo(
+        Rect.fromCircle(
+            center: Offset(size.width - radius, radius), radius: radius),
+        3 * pi / 2,
+        pi / 2,
+        false);
+    path.lineTo(size.width, size.height - radius);
+    path.arcTo(
+        Rect.fromCircle(
+            center: Offset(size.width - radius, size.height - radius),
+            radius: radius),
+        0,
+        pi / 2,
+        false);
+    path.lineTo(radius, size.height);
+    path.arcTo(
+        Rect.fromCircle(
+            center: Offset(radius, size.height - radius), radius: radius),
+        pi / 2,
+        pi / 2,
+        false);
+    path.lineTo(0, radius);
+    path.arcTo(Rect.fromCircle(center: Offset(radius, radius), radius: radius),
+        pi, pi / 2, false);
+    path.lineTo(size.width / 2, 0);
+    path.close();
+    //使用以下方式会导致不从最上面中间开始
+    // path.addRRect(RRect.fromRectAndRadius(
+    //     Rect.fromCenter(
+    //         center: Offset(size.width / 2, size.height / 2),
+    //         width: size.width,
+    //         height: size.height),
+    //     Radius.circular(radius)));
   }
 
   @override
