@@ -21,6 +21,7 @@ class _GalleryViewDemoState extends State<GalleryViewDemo> {
           itemCount: 101,
           minPerRow: 5,
           maxPerRow: 20,
+          duration: Duration(milliseconds: 500),
           itemBuilder: (_, index) {
             return Container(
               color: Colors.primaries[index % 18],
@@ -38,6 +39,7 @@ class GalleryView extends StatefulWidget {
   final int itemCount;
   final int minPerRow;
   final int maxPerRow;
+  final Duration? duration;
 
   GalleryView.builder({
     required this.itemBuilder,
@@ -45,6 +47,7 @@ class GalleryView extends StatefulWidget {
     required this.itemCount,
     this.minPerRow = 1,
     this.maxPerRow = 7,
+    this.duration,
   });
 
   @override
@@ -53,16 +56,21 @@ class GalleryView extends StatefulWidget {
 
 class _GalleryViewState extends State<GalleryView> {
   double _scale = 1;
+  double _tempScale = 1;
   double _lateScale = 1;
 
   @override
   Widget build(BuildContext context) {
     var screenWidth = MediaQuery.of(context).size.width;
     var maxWidth = screenWidth / this.widget.maxPerRow;
-    var nowWidth = maxWidth * _scale;
     var minWidth = screenWidth / this.widget.minPerRow;
-    if (nowWidth > minWidth) nowWidth = minWidth;
-    print('$nowWidth');
+    var nowWidth = maxWidth * (_scale);
+
+    if (nowWidth > minWidth) {
+      _scale = minWidth / maxWidth;
+      nowWidth = minWidth;
+    }
+    print('$_tempScale    $nowWidth     $_scale');
     return GestureDetector(
       onScaleUpdate: (ScaleUpdateDetails scaleUpdateDetails) {
         setState(() {
@@ -71,11 +79,18 @@ class _GalleryViewState extends State<GalleryView> {
           }
           _scale = _scale * (1 + scaleUpdateDetails.scale - _lateScale);
           _lateScale = scaleUpdateDetails.scale;
+          _tempScale = scaleUpdateDetails.scale;
         });
         if (_scale <= 1) _scale = 1;
-        // print('$_scale');
       },
-      child: Container(
+      onScaleEnd: (_) {
+        _tempScale = 1;
+      },
+      child: AnimatedContainer(
+        transform: Transform.scale(scale: _tempScale).transform,
+        duration: this.widget.duration == null
+            ? Duration(milliseconds: 200)
+            : this.widget.duration!,
         child: GridView.builder(
             gridDelegate: SliverGridDelegateWithMaxCrossAxisExtent(
                 maxCrossAxisExtent: nowWidth),
