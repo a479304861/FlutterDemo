@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
+
 
 class GalleryViewDemo extends StatefulWidget {
   @override
@@ -33,6 +35,8 @@ class _GalleryViewDemoState extends State<GalleryViewDemo> {
   }
 }
 
+
+
 class GalleryView extends StatefulWidget {
   final Widget Function(BuildContext, int) itemBuilder;
   final ScrollController? controller;
@@ -56,7 +60,6 @@ class GalleryView extends StatefulWidget {
 
 class _GalleryViewState extends State<GalleryView> {
   double _scale = 1;
-  double _tempScale = 1;
   double _lateScale = 1;
 
   @override
@@ -65,12 +68,14 @@ class _GalleryViewState extends State<GalleryView> {
     var maxWidth = screenWidth / this.widget.maxPerRow;
     var minWidth = screenWidth / this.widget.minPerRow;
     var nowWidth = maxWidth * (_scale);
-
+    var count = screenWidth / nowWidth; //每行多少个
+    var countCeil = count.ceil(); //取整
+    nowWidth = screenWidth / countCeil;
     if (nowWidth > minWidth) {
       _scale = minWidth / maxWidth;
       nowWidth = minWidth;
     }
-    print('$_tempScale    $nowWidth     $_scale');
+    // print('$_tempScale    $nowWidth     $_scale');
     return GestureDetector(
       onScaleUpdate: (ScaleUpdateDetails scaleUpdateDetails) {
         setState(() {
@@ -79,24 +84,61 @@ class _GalleryViewState extends State<GalleryView> {
           }
           _scale = _scale * (1 + scaleUpdateDetails.scale - _lateScale);
           _lateScale = scaleUpdateDetails.scale;
-          _tempScale = scaleUpdateDetails.scale;
         });
         if (_scale <= 1) _scale = 1;
       },
-      onScaleEnd: (_) {
-        _tempScale = 1;
-      },
-      child: AnimatedContainer(
-        transform: Transform.scale(scale: _tempScale).transform,
-        duration: this.widget.duration == null
-            ? Duration(milliseconds: 200)
-            : this.widget.duration!,
-        child: GridView.builder(
-            gridDelegate: SliverGridDelegateWithMaxCrossAxisExtent(
-                maxCrossAxisExtent: nowWidth),
-            itemCount: this.widget.itemCount,
-            itemBuilder: this.widget.itemBuilder),
-      ),
+      child: GridView.builder(
+          gridDelegate: SliverGridDelegateWithMaxCrossAxisExtent(
+              maxCrossAxisExtent: nowWidth),
+          itemCount: this.widget.itemCount,
+          itemBuilder: (ctx, index) {
+            return OpacityContainer(
+              widget: this.widget.itemBuilder(ctx, index),
+              duration: this.widget.duration == null
+                  ? Duration(seconds: 1)
+                  : this.widget.duration!,
+            );
+          }),
+    );
+  }
+}
+
+class OpacityContainer extends StatefulWidget {
+  final Widget widget;
+  final Duration duration;
+
+  OpacityContainer({required this.widget, required this.duration});
+
+  @override
+  _OpacityContainerState createState() => _OpacityContainerState();
+}
+
+class _OpacityContainerState extends State<OpacityContainer>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller =
+        AnimationController(vsync: this, duration: this.widget.duration);
+    _controller.addListener(() {
+      if (mounted) setState(() {});
+    });
+    _controller.forward();
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Opacity(
+      opacity: _controller.value,
+      child: this.widget.widget,
     );
   }
 }
